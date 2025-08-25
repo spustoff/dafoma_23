@@ -9,7 +9,6 @@ import SwiftUI
 
 struct LanguageLearningView: View {
     @StateObject private var viewModel = CourseViewModel()
-    @State private var showCourseDetail = false
     @State private var showLessonView = false
     @State private var selectedCourse: LanguageCourse?
     @State private var searchText = ""
@@ -42,10 +41,8 @@ struct LanguageLearningView: View {
                 }
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showCourseDetail) {
-                if let course = selectedCourse {
-                    CourseDetailView(course: course, viewModel: viewModel)
-                }
+            .sheet(item: $selectedCourse) { course in
+                CourseDetailView(course: course, viewModel: viewModel)
             }
             .sheet(isPresented: $showFilters) {
                 FiltersView(viewModel: viewModel)
@@ -229,7 +226,6 @@ struct LanguageLearningView: View {
                     ForEach(viewModel.getRecommendedCourses()) { course in
                         RecommendedCourseCard(course: course) {
                             selectedCourse = course
-                            showCourseDetail = true
                         }
                     }
                 }
@@ -269,7 +265,6 @@ struct LanguageLearningView: View {
                 ForEach(viewModel.filteredCourses) { course in
                     CourseCard(course: course, viewModel: viewModel) {
                         selectedCourse = course
-                        showCourseDetail = true
                     }
                 }
             }

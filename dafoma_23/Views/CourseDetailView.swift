@@ -13,6 +13,7 @@ struct CourseDetailView: View {
     @Environment(\.presentationMode) var presentationMode
     @State private var showLessonView = false
     @State private var selectedLesson: Lesson?
+    @State private var showNoLessonsAlert = false
     
     var body: some View {
         NavigationView {
@@ -57,6 +58,11 @@ struct CourseDetailView: View {
                             course.progress > 0 ? "arrow.right.circle.fill" : "play.circle.fill",
                             backgroundColor: ColorThemes.primaryBlue
                         ) {
+                            print("Play button tapped - starting course: \(course.title)")
+                            // Add haptic feedback for better user experience
+                            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                            impactFeedback.impactOccurred()
+                            
                             startCourse()
                         }
                         .padding(.trailing, Spacing.lg)
@@ -97,6 +103,11 @@ struct CourseDetailView: View {
             if let lesson = selectedLesson {
                 LessonView(lesson: lesson, course: course, viewModel: viewModel)
             }
+        }
+        .alert("No Lessons Available", isPresented: $showNoLessonsAlert) {
+            Button("OK") { }
+        } message: {
+            Text("This course doesn't have any lessons available yet. Please check back later or contact support.")
         }
     }
     
@@ -266,16 +277,40 @@ struct CourseDetailView: View {
     
     // MARK: - Actions
     private func startCourse() {
-        viewModel.selectCourse(course)
+        print("startCourse() called for course: \(course.title)")
         
+        // Ensure we have lessons available
+        guard !course.lessons.isEmpty else {
+            print("Error: Course has no lessons available")
+            showNoLessonsAlert = true
+            return
+        }
+        
+        // Select the course in the view model
+        viewModel.selectCourse(course)
+        print("Course selected in view model")
+        
+        // Find the appropriate lesson to start
+        let lessonToStart: Lesson
         if let firstIncompleteLesson = course.lessons.first(where: { !$0.isCompleted }) {
-            selectedLesson = firstIncompleteLesson
-            viewModel.startLesson(firstIncompleteLesson)
-            showLessonView = true
+            lessonToStart = firstIncompleteLesson
+            print("Starting first incomplete lesson: \(lessonToStart.title)")
         } else if let firstLesson = course.lessons.first {
-            selectedLesson = firstLesson
-            viewModel.startLesson(firstLesson)
+            lessonToStart = firstLesson
+            print("Starting first lesson (all completed): \(lessonToStart.title)")
+        } else {
+            print("Error: No suitable lesson found to start")
+            return
+        }
+        
+        // Start the lesson
+        selectedLesson = lessonToStart
+        viewModel.startLesson(lessonToStart)
+        
+        // Show the lesson view with a slight delay to ensure state is updated
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             showLessonView = true
+            print("Lesson view should now be displayed")
         }
     }
 }

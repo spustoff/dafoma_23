@@ -350,3 +350,5 @@ struct LearningChallenge: Identifiable {
     let progress: Double // 0.0 to 1.0
     let isCompleted: Bool
 }
+
+

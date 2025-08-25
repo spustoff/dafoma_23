@@ -681,3 +681,5 @@ struct TipDetailView: View {
         }
     }
 }
+
+

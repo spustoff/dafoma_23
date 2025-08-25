@@ -297,3 +297,5 @@ class CourseViewModel: ObservableObject {
         return category.icon
     }
 }
+
+

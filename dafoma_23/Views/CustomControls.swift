@@ -102,15 +102,15 @@ struct GlowingButton: View {
             HStack(spacing: Spacing.sm) {
                 if let icon = icon {
                     Image(systemName: icon)
-                        .font(Typography.body.weight(.semibold))
+                        .font(iconFont)
                 }
                 
                 Text(title)
-                    .font(Typography.body.weight(.semibold))
+                    .font(textFont)
             }
             .foregroundColor(ColorThemes.textPrimary)
-            .padding(.horizontal, Spacing.lg)
-            .padding(.vertical, Spacing.md)
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
             .background(style.colors.background)
             .cornerRadius(CornerRadius.medium)
             .overlay(
@@ -121,17 +121,56 @@ struct GlowingButton: View {
             .scaleEffect(isPressed ? 0.95 : 1.0)
             .opacity(isEnabled ? 1.0 : 0.6)
         }
+        .frame(minHeight: minTouchTarget) // Ensure minimum touch target
+        .contentShape(Rectangle()) // Ensure entire frame is tappable
         .disabled(!isEnabled)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(AnimationPresets.easeOut) {
-                isPressed = pressing
-            }
-        }, perform: {})
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !isPressed && isEnabled {
+                        withAnimation(AnimationPresets.easeOut) {
+                            isPressed = true
+                        }
+                    }
+                }
+                .onEnded { _ in
+                    if isEnabled {
+                        withAnimation(AnimationPresets.easeOut) {
+                            isPressed = false
+                        }
+                    }
+                }
+        )
         .onAppear {
             withAnimation(Animation.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
                 glowIntensity = 1.0
             }
         }
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
+    }
+    
+    // iPad-adaptive sizing
+    private var iconFont: Font {
+        UIDevice.current.userInterfaceIdiom == .pad ? 
+            Typography.title3.weight(.semibold) : Typography.body.weight(.semibold)
+    }
+    
+    private var textFont: Font {
+        UIDevice.current.userInterfaceIdiom == .pad ? 
+            Typography.title3.weight(.semibold) : Typography.body.weight(.semibold)
+    }
+    
+    private var horizontalPadding: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? Spacing.xl : Spacing.lg
+    }
+    
+    private var verticalPadding: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? Spacing.lg : Spacing.md
+    }
+    
+    private var minTouchTarget: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 60 : 44
     }
 }
 
@@ -154,17 +193,41 @@ struct FloatingActionButton: View {
             Image(systemName: icon)
                 .font(.title2.weight(.semibold))
                 .foregroundColor(ColorThemes.textPrimary)
-                .frame(width: 56, height: 56)
+                .frame(width: buttonSize, height: buttonSize)
                 .background(backgroundColor)
-                .cornerRadius(28)
+                .cornerRadius(buttonSize / 2)
                 .shadow(color: backgroundColor.opacity(0.4), radius: 12, x: 0, y: 6)
         }
+        .frame(width: touchTargetSize, height: touchTargetSize) // Larger touch target
+        .contentShape(Rectangle()) // Ensure entire frame is tappable
         .scaleEffect(isPressed ? 0.9 : 1.0)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
-            withAnimation(AnimationPresets.spring) {
-                isPressed = pressing
-            }
-        }, perform: {})
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !isPressed {
+                        withAnimation(AnimationPresets.spring) {
+                            isPressed = true
+                        }
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(AnimationPresets.spring) {
+                        isPressed = false
+                    }
+                }
+        )
+        .accessibilityLabel("Play button")
+        .accessibilityHint("Tap to start the course")
+        .accessibilityAddTraits(.isButton)
+    }
+    
+    // iPad-adaptive sizing
+    private var buttonSize: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 64 : 56
+    }
+    
+    private var touchTargetSize: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 80 : 72
     }
 }
 
