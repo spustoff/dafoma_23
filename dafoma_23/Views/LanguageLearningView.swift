@@ -13,6 +13,7 @@ struct LanguageLearningView: View {
     @State private var selectedCourse: LanguageCourse?
     @State private var searchText = ""
     @State private var showFilters = false
+    @State private var isDataReady = false
     
     var body: some View {
         NavigationView {
@@ -42,7 +43,28 @@ struct LanguageLearningView: View {
             }
             .navigationBarHidden(true)
             .sheet(item: $selectedCourse) { course in
-                CourseDetailView(course: course, viewModel: viewModel)
+                if isDataReady {
+                    CourseDetailView(course: course, viewModel: viewModel)
+                } else {
+                    // Loading view for sheet
+                    VStack {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle(tint: ColorThemes.primaryBlue))
+                        Text("Loading...")
+                            .font(Typography.body)
+                            .foregroundColor(ColorThemes.textSecondary)
+                            .padding(.top, Spacing.md)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(ColorThemes.backgroundGradient)
+                    .onAppear {
+                        // Ensure data is loaded before showing content
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            isDataReady = true
+                        }
+                    }
+                }
             }
             .sheet(isPresented: $showFilters) {
                 FiltersView(viewModel: viewModel)
@@ -50,6 +72,10 @@ struct LanguageLearningView: View {
         }
         .onAppear {
             viewModel.loadCourses()
+            // Mark data as ready after a brief delay to ensure proper loading
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isDataReady = true
+            }
         }
     }
     
@@ -225,7 +251,10 @@ struct LanguageLearningView: View {
                 HStack(spacing: Spacing.md) {
                     ForEach(viewModel.getRecommendedCourses()) { course in
                         RecommendedCourseCard(course: course) {
-                            selectedCourse = course
+                            // Ensure data is ready before presenting
+                            if isDataReady {
+                                selectedCourse = course
+                            }
                         }
                     }
                 }
@@ -264,7 +293,10 @@ struct LanguageLearningView: View {
             LazyVStack(spacing: Spacing.md) {
                 ForEach(viewModel.filteredCourses) { course in
                     CourseCard(course: course, viewModel: viewModel) {
-                        selectedCourse = course
+                        // Ensure data is ready before presenting
+                        if isDataReady {
+                            selectedCourse = course
+                        }
                     }
                 }
             }

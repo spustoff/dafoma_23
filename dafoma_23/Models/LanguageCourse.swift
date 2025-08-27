@@ -85,13 +85,26 @@ extension LanguageCourse {
             description: "Advanced financial terms for investment and trading",
             difficulty: .advanced,
             estimatedDuration: 90,
-            lessons: [],
+            lessons: Lesson.sampleInvestmentLessons,
             category: .financial,
-            isUnlocked: false,
+            isUnlocked: true,
             progress: 0.0,
             imageSystemName: "chart.line.uptrend.xyaxis"
+        ),
+        LanguageCourse(
+            title: "Grammar Fundamentals",
+            language: "English",
+            description: "Master essential English grammar rules and structures",
+            difficulty: .beginner,
+            estimatedDuration: 40,
+            lessons: Lesson.sampleLessons, // Reuse existing lessons for variety
+            category: .grammar,
+            isUnlocked: true,
+            progress: 0.0,
+            imageSystemName: "textformat"
         )
     ]
 }
+
 
 

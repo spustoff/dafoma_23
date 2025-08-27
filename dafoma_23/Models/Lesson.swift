@@ -161,8 +161,114 @@ extension Lesson {
             ],
             isCompleted: false,
             order: 1
+        ),
+        Lesson(
+            title: "Email Communication",
+            content: "Writing professional emails and understanding business correspondence.",
+            type: .reading,
+            duration: 20,
+            questions: [
+                Question(
+                    question: "What is the most professional email greeting?",
+                    options: ["Hey there!", "Dear Sir/Madam,", "What's up?", "Hi buddy,"],
+                    correctAnswer: 1,
+                    explanation: "'Dear Sir/Madam' is the most formal and professional greeting when you don't know the recipient's name.",
+                    type: .multipleChoice
+                )
+            ],
+            financialTip: "Professional communication can lead to better business relationships and opportunities.",
+            vocabulary: [
+                VocabularyItem(
+                    word: "Correspondence",
+                    definition: "Communication by exchanging letters or emails",
+                    example: "Please keep all correspondence professional.",
+                    financialContext: "Good business correspondence builds trust and credibility",
+                    pronunciation: "/ˌkɔrəˈspɑndəns/"
+                )
+            ],
+            isCompleted: false,
+            order: 2
+        )
+    ]
+    
+    static let sampleInvestmentLessons: [Lesson] = [
+        Lesson(
+            title: "Stock Market Basics",
+            content: "Understanding stocks, shares, and how the stock market works.",
+            type: .financial,
+            duration: 30,
+            questions: [
+                Question(
+                    question: "What does it mean to own stock in a company?",
+                    options: ["You work for the company", "You own part of the company", "You owe money to the company", "You manage the company"],
+                    correctAnswer: 1,
+                    explanation: "Owning stock means you own a small portion of the company and have a claim on its assets and earnings.",
+                    type: .multipleChoice
+                ),
+                Question(
+                    question: "Stock prices always go up over time.",
+                    options: ["True", "False"],
+                    correctAnswer: 1,
+                    explanation: "Stock prices can fluctuate and may go down as well as up. Past performance doesn't guarantee future results.",
+                    type: .trueFalse
+                )
+            ],
+            financialTip: "Diversify your investments to reduce risk. Never put all your money in one stock.",
+            vocabulary: [
+                VocabularyItem(
+                    word: "Dividend",
+                    definition: "A payment made by a corporation to its shareholders",
+                    example: "The company pays quarterly dividends to its investors.",
+                    financialContext: "Dividends provide regular income from your stock investments",
+                    pronunciation: "/ˈdɪvɪdend/"
+                ),
+                VocabularyItem(
+                    word: "Portfolio",
+                    definition: "A collection of financial investments",
+                    example: "Her investment portfolio includes stocks, bonds, and mutual funds.",
+                    financialContext: "A diversified portfolio helps manage investment risk",
+                    pronunciation: "/pɔrtˈfoʊlioʊ/"
+                )
+            ],
+            isCompleted: false,
+            order: 1
+        ),
+        Lesson(
+            title: "Risk and Return",
+            content: "Understanding the relationship between investment risk and potential returns.",
+            type: .quiz,
+            duration: 25,
+            questions: [
+                Question(
+                    question: "Which investment typically has the highest risk?",
+                    options: ["Government bonds", "Savings account", "Individual stocks", "CDs"],
+                    correctAnswer: 2,
+                    explanation: "Individual stocks typically have the highest risk but also the potential for highest returns.",
+                    type: .multipleChoice
+                ),
+                Question(
+                    question: "What is diversification?",
+                    options: ["Buying one stock", "Spreading investments across different assets", "Selling all investments", "Only investing in bonds"],
+                    correctAnswer: 1,
+                    explanation: "Diversification means spreading your investments across different types of assets to reduce risk.",
+                    type: .multipleChoice
+                )
+            ],
+            financialTip: "Higher potential returns usually come with higher risk. Understand your risk tolerance before investing.",
+            vocabulary: [
+                VocabularyItem(
+                    word: "Volatility",
+                    definition: "The degree of variation in trading prices over time",
+                    example: "High volatility means the stock price changes rapidly.",
+                    financialContext: "Volatile investments can provide high returns but also high losses",
+                    pronunciation: "/ˌvɑləˈtɪləti/"
+                )
+            ],
+            isCompleted: false,
+            order: 2
         )
     ]
 }
+
 
 

@@ -14,6 +14,7 @@ struct CourseDetailView: View {
     @State private var showLessonView = false
     @State private var selectedLesson: Lesson?
     @State private var showNoLessonsAlert = false
+    @State private var isDataLoaded = false
     
     var body: some View {
         NavigationView {
@@ -21,7 +22,21 @@ struct CourseDetailView: View {
                 ColorThemes.backgroundGradient
                     .ignoresSafeArea()
                 
-                ScrollView {
+                if !isDataLoaded {
+                    // Loading state
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .progressViewStyle(CircularProgressViewStyle(tint: ColorThemes.primaryBlue))
+                        Text("Loading course details...")
+                            .font(Typography.body)
+                            .foregroundColor(ColorThemes.textSecondary)
+                            .padding(.top, Spacing.md)
+                        Spacer()
+                    }
+                } else {
+                    ScrollView {
                     VStack(spacing: Spacing.lg) {
                         // Header
                         courseHeader
@@ -45,31 +60,47 @@ struct CourseDetailView: View {
                     }
                     .padding(.horizontal, Spacing.md)
                     .padding(.bottom, 100) // Space for floating button
-                }
-                
-                // Floating start button
+                    }
+                    
+                    // Floating start button
                 VStack {
                     Spacer()
                     
                     HStack {
                         Spacer()
                         
-                        FloatingActionButton(
-                            course.progress > 0 ? "arrow.right.circle.fill" : "play.circle.fill",
-                            backgroundColor: ColorThemes.primaryBlue
-                        ) {
-                            print("Play button tapped - starting course: \(course.title)")
-                            // Add haptic feedback for better user experience
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-                            impactFeedback.impactOccurred()
-                            
-                            startCourse()
+                        Group {
+                            if course.lessons.isEmpty {
+                                // Show disabled button when no lessons
+                                FloatingActionButton(
+                                    "exclamationmark.triangle.fill",
+                                    backgroundColor: ColorThemes.textTertiary
+                                ) {
+                                    print("No lessons available for course: \(course.title)")
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                                    impactFeedback.impactOccurred()
+                                    showNoLessonsAlert = true
+                                }
+                            } else {
+                                FloatingActionButton(
+                                    course.progress > 0 ? "arrow.right.circle.fill" : "play.circle.fill",
+                                    backgroundColor: ColorThemes.primaryBlue
+                                ) {
+                                    print("Play button tapped - starting course: \(course.title)")
+                                    // Add haptic feedback for better user experience
+                                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                                    impactFeedback.impactOccurred()
+                                    
+                                    startCourse()
+                                }
+                            }
                         }
                         .padding(.trailing, Spacing.lg)
                         .padding(.bottom, Spacing.lg)
                     }
                 }
             }
+        }
             .navigationBarItems(
                 leading: Button("Close") {
                     presentationMode.wrappedValue.dismiss()
@@ -108,6 +139,12 @@ struct CourseDetailView: View {
             Button("OK") { }
         } message: {
             Text("This course doesn't have any lessons available yet. Please check back later or contact support.")
+        }
+        .onAppear {
+            // Simulate data loading delay to ensure proper initialization
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                isDataLoaded = true
+            }
         }
     }
     
@@ -231,17 +268,38 @@ struct CourseDetailView: View {
                 .font(Typography.title2)
                 .foregroundColor(ColorThemes.textPrimary)
             
-            LazyVStack(spacing: Spacing.sm) {
-                ForEach(Array(course.lessons.enumerated()), id: \.element.id) { index, lesson in
-                    LessonCard(
-                        lesson: lesson,
-                        index: index + 1,
-                        isLocked: !course.isUnlocked && index > 0
-                    ) {
-                        if course.isUnlocked || index == 0 {
-                            selectedLesson = lesson
-                            viewModel.startLesson(lesson)
-                            showLessonView = true
+            if course.lessons.isEmpty {
+                // No lessons available state
+                VStack(spacing: Spacing.md) {
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 48))
+                        .foregroundColor(ColorThemes.textTertiary)
+                    
+                    Text("No Lessons Available")
+                        .font(Typography.headline)
+                        .foregroundColor(ColorThemes.textPrimary)
+                    
+                    Text("This course doesn't have any lessons yet. Check back later for updates.")
+                        .font(Typography.body)
+                        .foregroundColor(ColorThemes.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Spacing.lg)
+                }
+                .padding(Spacing.xl)
+                .cardStyle()
+            } else {
+                LazyVStack(spacing: Spacing.sm) {
+                    ForEach(Array(course.lessons.enumerated()), id: \.element.id) { index, lesson in
+                        LessonCard(
+                            lesson: lesson,
+                            index: index + 1,
+                            isLocked: !course.isUnlocked && index > 0
+                        ) {
+                            if course.isUnlocked || index == 0 {
+                                selectedLesson = lesson
+                                viewModel.startLesson(lesson)
+                                showLessonView = true
+                            }
                         }
                     }
                 }
