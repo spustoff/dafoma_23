@@ -40,9 +40,15 @@ struct LessonView: View {
                         .foregroundColor(ColorThemes.primaryBlue)
                     }
                     
-                    Text("\(viewModel.currentQuestionIndex + 1)/\(lesson.questions.count)")
-                        .font(Typography.caption1)
-                        .foregroundColor(ColorThemes.textSecondary)
+                                if !lesson.questions.isEmpty {
+                Text("\(viewModel.currentQuestionIndex + 1)/\(lesson.questions.count)")
+                    .font(Typography.caption1)
+                    .foregroundColor(ColorThemes.textSecondary)
+            } else {
+                Text("Content Lesson")
+                    .font(Typography.caption1)
+                    .foregroundColor(ColorThemes.textSecondary)
+            }
                 }
             )
         }
@@ -50,6 +56,16 @@ struct LessonView: View {
             VocabularyView(vocabulary: lesson.vocabulary)
         }
         .onAppear {
+            print("=== LESSON DEBUG INFO ===")
+            print("LessonView appeared for lesson: \(lesson.title)")
+            print("Lesson content length: \(lesson.content.count) characters")
+            print("Lesson content preview: \(String(lesson.content.prefix(100)))...")
+            print("Number of questions: \(lesson.questions.count)")
+            print("Lesson type: \(lesson.type.rawValue)")
+            print("Lesson duration: \(lesson.duration) minutes")
+            print("Has vocabulary: \(!lesson.vocabulary.isEmpty)")
+            print("Has financial tip: \(lesson.financialTip != nil)")
+            print("=========================")
             viewModel.startLesson(lesson)
         }
     }
@@ -72,8 +88,18 @@ struct LessonView: View {
                     }
                     
                     // Question content
-                    if viewModel.currentQuestionIndex < lesson.questions.count {
+                    if lesson.questions.isEmpty {
+                        // Show message when no questions available
+                        noQuestionsView
+                    } else if viewModel.currentQuestionIndex < lesson.questions.count {
                         questionView
+                    } else {
+                        // Fallback for invalid question index
+                        Text("Lesson completed! Please check your progress.")
+                            .font(Typography.body)
+                            .foregroundColor(ColorThemes.textSecondary)
+                            .padding(Spacing.lg)
+                            .cardStyle()
                     }
                 }
                 .padding(.horizontal, Spacing.md)
@@ -102,15 +128,27 @@ struct LessonView: View {
             }
             
             HStack {
+                            if !lesson.questions.isEmpty {
                 Text("Question \(viewModel.currentQuestionIndex + 1) of \(lesson.questions.count)")
                     .font(Typography.caption1)
                     .foregroundColor(ColorThemes.textSecondary)
+            } else {
+                Text("Reading Lesson")
+                    .font(Typography.caption1)
+                    .foregroundColor(ColorThemes.textSecondary)
+            }
                 
                 Spacer()
                 
-                Text("\(Int(viewModel.getLessonProgress() * 100))% Complete")
-                    .font(Typography.caption1)
-                    .foregroundColor(ColorThemes.primaryBlue)
+                if !lesson.questions.isEmpty {
+                    Text("\(Int(viewModel.getLessonProgress() * 100))% Complete")
+                        .font(Typography.caption1)
+                        .foregroundColor(ColorThemes.primaryBlue)
+                } else {
+                    Text("Review Content")
+                        .font(Typography.caption1)
+                        .foregroundColor(ColorThemes.primaryBlue)
+                }
             }
             .padding(.horizontal, Spacing.md)
         }
@@ -119,32 +157,66 @@ struct LessonView: View {
     
     // MARK: - Lesson Header
     private var lessonHeader: some View {
-        VStack(spacing: Spacing.md) {
+        VStack(spacing: Spacing.lg) {
             // Lesson type icon
             ZStack {
                 Circle()
                     .fill(ColorThemes.primaryGradient)
                     .frame(width: 80, height: 80)
+                    .shadow(color: ColorThemes.primaryBlue.opacity(0.3), radius: 10, x: 0, y: 5)
                 
                 Image(systemName: lesson.type.icon)
                     .font(.system(size: 30, weight: .bold))
                     .foregroundColor(ColorThemes.textPrimary)
             }
             
-            VStack(spacing: Spacing.sm) {
+            VStack(spacing: Spacing.md) {
                 Text(lesson.title)
-                    .font(Typography.title1)
+                    .font(Typography.title1.weight(.bold))
                     .foregroundColor(ColorThemes.textPrimary)
                     .multilineTextAlignment(.center)
                 
-                Text(lesson.content)
-                    .font(Typography.body)
-                    .foregroundColor(ColorThemes.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Spacing.md)
+                // Lesson type badge
+                HStack {
+                    Image(systemName: lesson.type.icon)
+                        .font(.caption)
+                    Text(lesson.type.rawValue)
+                        .font(Typography.caption1.weight(.medium))
+                }
+                .foregroundColor(ColorThemes.primaryBlue)
+                .padding(.horizontal, Spacing.sm)
+                .padding(.vertical, Spacing.xs)
+                .background(ColorThemes.primaryBlue.opacity(0.1))
+                .cornerRadius(CornerRadius.small)
+                
+                // Main content with enhanced visibility
+                VStack(spacing: Spacing.sm) {
+                    HStack {
+                        Image(systemName: "doc.text")
+                            .font(.caption)
+                            .foregroundColor(ColorThemes.textTertiary)
+                        Text("Lesson Content")
+                            .font(Typography.caption1.weight(.medium))
+                            .foregroundColor(ColorThemes.textTertiary)
+                        Spacer()
+                    }
+                    
+                    Text(lesson.content.isEmpty ? "This lesson covers \(lesson.title.lowercased()) concepts. Review the material and complete any questions below to master this topic." : lesson.content)
+                        .font(Typography.body)
+                        .foregroundColor(ColorThemes.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .padding(Spacing.md)
+                        .background(ColorThemes.surfacePrimary)
+                        .cornerRadius(CornerRadius.medium)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: CornerRadius.medium)
+                                .stroke(ColorThemes.borderPrimary, lineWidth: 1)
+                        )
+                }
             }
         }
         .padding(.top, Spacing.lg)
+        .padding(.horizontal, Spacing.sm)
     }
     
     // MARK: - Financial Tip Card
@@ -253,30 +325,43 @@ struct LessonView: View {
     // MARK: - Navigation Buttons
     private var navigationButtons: some View {
         HStack(spacing: Spacing.md) {
-            // Previous button
-            if viewModel.currentQuestionIndex > 0 {
-                Button("Previous") {
-                    viewModel.previousQuestion()
+            // Only show navigation for lessons with questions
+            if !lesson.questions.isEmpty {
+                // Previous button
+                if viewModel.currentQuestionIndex > 0 {
+                    Button("Previous") {
+                        viewModel.previousQuestion()
+                    }
+                    .secondaryButton()
                 }
-                .secondaryButton()
-            }
-            
-            Spacer()
-            
-            // Next/Finish button
-            let hasAnswered = viewModel.selectedAnswers.count > viewModel.currentQuestionIndex &&
-                             viewModel.selectedAnswers[viewModel.currentQuestionIndex] >= 0
-            let isLastQuestion = viewModel.currentQuestionIndex >= lesson.questions.count - 1
-            
-            GlowingButton(
-                isLastQuestion ? "Finish Lesson" : "Next Question",
-                icon: isLastQuestion ? "checkmark.circle.fill" : "arrow.right",
-                isEnabled: hasAnswered
-            ) {
-                if isLastQuestion {
+                
+                Spacer()
+                
+                // Next/Finish button
+                let hasAnswered = viewModel.selectedAnswers.count > viewModel.currentQuestionIndex &&
+                                 viewModel.selectedAnswers[viewModel.currentQuestionIndex] >= 0
+                let isLastQuestion = viewModel.currentQuestionIndex >= lesson.questions.count - 1
+                
+                GlowingButton(
+                    isLastQuestion ? "Finish Lesson" : "Next Question",
+                    icon: isLastQuestion ? "checkmark.circle.fill" : "arrow.right",
+                    isEnabled: hasAnswered
+                ) {
+                    if isLastQuestion {
+                        viewModel.finishLesson()
+                    } else {
+                        viewModel.nextQuestion()
+                    }
+                }
+            } else {
+                // For content-only lessons, show complete button
+                Spacer()
+                
+                GlowingButton(
+                    "Complete Lesson",
+                    icon: "checkmark.circle.fill"
+                ) {
                     viewModel.finishLesson()
-                } else {
-                    viewModel.nextQuestion()
                 }
             }
         }
@@ -368,6 +453,32 @@ struct LessonView: View {
             }
         }
         .padding(Spacing.lg)
+    }
+    
+    // MARK: - No Questions View
+    private var noQuestionsView: some View {
+        VStack(spacing: Spacing.lg) {
+            Image(systemName: "book.closed")
+                .font(.system(size: 48))
+                .foregroundColor(ColorThemes.textTertiary)
+            
+            Text("Content Only Lesson")
+                .font(Typography.title2)
+                .foregroundColor(ColorThemes.textPrimary)
+            
+            Text("This lesson contains educational content without interactive questions. Review the material above to learn about \(lesson.title.lowercased()).")
+                .font(Typography.body)
+                .foregroundColor(ColorThemes.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Spacing.lg)
+            
+            // Complete lesson button
+            GlowingButton("Mark as Complete", icon: "checkmark.circle.fill") {
+                viewModel.finishLesson()
+            }
+        }
+        .padding(Spacing.xl)
+        .cardStyle()
     }
     
     // MARK: - Helper Methods

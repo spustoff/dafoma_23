@@ -158,7 +158,13 @@ class CourseViewModel: ObservableObject {
         guard let lesson = currentLesson,
               let course = currentCourse else { return }
         
-        calculateScore()
+        // For lessons without questions, set score to 100%
+        if lesson.questions.isEmpty {
+            lessonScore = 100.0
+        } else {
+            calculateScore()
+        }
+        
         showResults = true
         isLessonCompleted = true
         
@@ -182,6 +188,12 @@ class CourseViewModel: ObservableObject {
     
     private func calculateScore() {
         guard let lesson = currentLesson else { return }
+        
+        // Handle lessons without questions
+        guard !lesson.questions.isEmpty else {
+            lessonScore = 100.0
+            return
+        }
         
         let correctAnswers = lesson.questions.enumerated().reduce(0) { count, element in
             let (index, question) = element
@@ -211,6 +223,15 @@ class CourseViewModel: ObservableObject {
     // MARK: - Progress Tracking
     func getLessonProgress() -> Double {
         guard let lesson = currentLesson else { return 0 }
+        
+        // For lessons without questions, progress is always 100% when viewed
+        if lesson.questions.isEmpty {
+            return 1.0
+        }
+        
+        // Avoid division by zero
+        guard lesson.questions.count > 0 else { return 0 }
+        
         return Double(currentQuestionIndex) / Double(lesson.questions.count)
     }
     
@@ -297,6 +318,7 @@ class CourseViewModel: ObservableObject {
         return category.icon
     }
 }
+
 
 
 
